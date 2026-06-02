@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Input Monitor",
+  "version": "1.0",
+  "description": "Monitors what the user types and performs an action on button click.",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": ["storage"]
+}
