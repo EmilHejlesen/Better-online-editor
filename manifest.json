@@ -2,9 +2,15 @@
   "manifest_version": 3,
   "name": "Input Monitor",
   "version": "1.0",
-  "description": "Monitors what the user types and performs an action on button click.",
+  "description": "Monitors what the user types and performs an action on a key combo.",
   "action": {
     "default_popup": "popup.html"
   },
-  "permissions": ["storage"]
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
 }
