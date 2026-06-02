@@ -11,9 +11,19 @@ document.addEventListener("keydown", (event) => {
     } else {
       selected = window.getSelection().toString();
     }
+    
+    
+    let wrapped_text = "Nothing selected";
 
-    chrome.storage.local.set({ markedText: selected });
-    showToast(selected ? `Captured: "${selected}"` : "Nothing selected");
+    if (selected) {
+      wrapped_text = `"${selected}"`;
+    } else {
+      wrapped_text = "Nothing selected";
+    }
+
+    chrome.storage.local.set({ markedText: wrapped_text });
+
+    showToast(selected ? `Captured: "${selected}"` : selected);
   }
 });
 
