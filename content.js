@@ -1,7 +1,9 @@
 document.addEventListener("keydown", (event) => {
-  if (event.ctrlKey && event.shiftKey && event.code === "KeyU") {
-    event.preventDefault();
+  if (
+    event.shiftKey &&
 
+    event.code === "Digit2"
+  ) {
     const el = document.activeElement;
 
     const isTextField =
@@ -10,21 +12,26 @@ document.addEventListener("keydown", (event) => {
       el.selectionStart != null;
     const isEditable = isTextField || (el && el.isContentEditable);
 
-    // Insertion only makes sense in editable targets.
+    // Is there actually something selected to wrap?
+    const hasSelection = isTextField
+      ? el.selectionStart !== el.selectionEnd
+      : !window.getSelection().isCollapsed;
+
+    // Nothing selected → don't hijack the key; let "@" type normally.
+    if (!hasSelection) return;
+
+    // Selection exists but target isn't editable → can't insert.
     if (!isEditable) {
       showToast("Can't insert here");
       return;
     }
 
+    event.preventDefault();
+
     if (isTextField) {
       // input/textarea use a different selection API than the rest of the page
       const start = el.selectionStart;
       const end = el.selectionEnd;
-
-      if (start === end) {
-        showToast("Nothing selected");
-        return;
-      }
 
       const selected = el.value.substring(start, end);
       const wrapped = wrap_text_with_quotes(selected);
@@ -37,12 +44,6 @@ document.addEventListener("keydown", (event) => {
     } else {
       // contentEditable: operate on the live DOM selection
       const sel = window.getSelection();
-
-      if (!sel.rangeCount || sel.isCollapsed) {
-        showToast("Nothing selected");
-        return;
-      }
-
       const selected = sel.toString();
       const wrapped = wrap_text_with_quotes(selected);
 
