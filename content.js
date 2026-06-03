@@ -3,27 +3,64 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
 
     const el = document.activeElement;
-    let selected = "";
 
-    // input/textarea use a different selection API than the rest of the page
-    if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) {
-      selected = el.value.substring(el.selectionStart, el.selectionEnd);
-    } else {
-      selected = window.getSelection().toString();
-    }
-    
-    
-    let wrapped_text = "Nothing selected";
+    const isTextField =
+      el &&
+      (el.tagName === "INPUT" || el.tagName === "TEXTAREA") &&
+      el.selectionStart != null;
+    const isEditable = isTextField || (el && el.isContentEditable);
 
-    if (selected) {
-      wrapped_text = `"${selected}"`;
-    } else {
-      wrapped_text = "Nothing selected";
+    // Insertion only makes sense in editable targets.
+    if (!isEditable) {
+      showToast("Can't insert here");
+      return;
     }
 
-    chrome.storage.local.set({ markedText: wrapped_text });
+    if (isTextField) {
+      // input/textarea use a different selection API than the rest of the page
+      const start = el.selectionStart;
+      const end = el.selectionEnd;
 
-    showToast(selected ? `Captured: "${selected}"` : selected);
+      if (start === end) {
+        showToast("Nothing selected");
+        return;
+      }
+
+      const selected = el.value.substring(start, end);
+      const wrapped = wrap_text_with_quotes(selected);
+
+      el.setRangeText(wrapped, start, end, "select");
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+
+      chrome.storage.local.set({ markedText: wrapped });
+      showToast(`Inserted: ${wrapped}`);
+    } else {
+      // contentEditable: operate on the live DOM selection
+      const sel = window.getSelection();
+
+      if (!sel.rangeCount || sel.isCollapsed) {
+        showToast("Nothing selected");
+        return;
+      }
+
+      const selected = sel.toString();
+      const wrapped = wrap_text_with_quotes(selected);
+
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      const node = document.createTextNode(wrapped);
+      range.insertNode(node);
+
+      // Keep the inserted text selected
+      range.selectNode(node);
+      sel.removeAllRanges();
+      sel.addRange(range);
+
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+
+      chrome.storage.local.set({ markedText: wrapped });
+      showToast(`Inserted: ${wrapped}`);
+    }
   }
 });
 
