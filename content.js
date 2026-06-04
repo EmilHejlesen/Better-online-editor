@@ -1,7 +1,6 @@
 document.addEventListener("keydown", (event) => {
   if (
     event.shiftKey &&
-
     event.code === "Digit2"
   ) {
     const el = document.activeElement;
